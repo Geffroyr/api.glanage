@@ -17,7 +17,7 @@ class Rendezvous
     private $id;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Entity\Evenement", inversedBy="rendezvouses", cascade={"all"})
+     * @ORM\ManyToOne(targetEntity="App\Entity\Evenement", inversedBy="rendezvouses", cascade={"persist"})
      * @ORM\JoinColumn(nullable=false)
      */
     private $evenement;
@@ -49,6 +49,10 @@ class Rendezvous
         return $this;
     }
 
+    /* public function getHeure()
+    {
+        return $this->heure;
+    } */
     public function getHeure()
     {
         return $this->heure? $this->heure->format('H:i'):$this->heure;

@@ -18,7 +18,7 @@ class Deroulement
     private $id;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Entity\Evenement", inversedBy="deroulements", cascade={"all"})
+     * @ORM\ManyToOne(targetEntity="App\Entity\Evenement", inversedBy="deroulements", cascade={"persist"})
      * @ORM\JoinColumn(nullable=false)
      */
     private $evenement;
@@ -50,6 +50,10 @@ class Deroulement
         return $this;
     }
 
+    /* public function getHeure()
+    {
+        return $this->heure;
+    } */
     public function getHeure()
     {
         return $this->heure? $this->heure->format('H:i'):$this->heure;

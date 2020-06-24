@@ -63,8 +63,6 @@ class Utilisateur implements UserInterface
      */
     private $phone;
 
-    private $type;
-
     /**
      * @ORM\Column(type="integer", nullable=true)
      */
@@ -74,6 +72,11 @@ class Utilisateur implements UserInterface
      * @ORM\ManyToOne(targetEntity=Lieu::class)
      */
     private $lieu;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $enabled;
 
     public function getType(): ?string {
         if ($this->getRoles()[0]=='ROLE_GLANEUR'){
@@ -228,5 +231,22 @@ class Utilisateur implements UserInterface
         $this->lieu = $lieu;
 
         return $this;
+    }
+
+    public function getEnabled(): ?bool
+    {
+        return $this->enabled;
+    }
+
+    public function setEnabled(bool $enabled): self
+    {
+        $this->enabled = $enabled;
+
+        return $this;
+    }
+
+    public function isEnabled(): ?bool
+    {
+        return $this->enabled;
     }
 }

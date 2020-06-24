@@ -5,21 +5,23 @@ namespace App\Controller;
 use App\Entity\Lieu;
 use App\Entity\Glaneur;
 use App\Entity\Actualite;
+use App\Entity\Agriculteur;
 use App\Entity\Evenement;
 use App\Entity\Utilisateur;
+use App\Form\EvenementType;
 use App\Form\GlaneurZoneType;
 use App\Entity\EvenementGlaneur;
-use App\Repository\EvenementGlaneurRepository;
 use App\Repository\LieuRepository;
 use App\Repository\EvenementRepository;
 use Symfony\Component\HttpFoundation\Request;
+use App\Repository\EvenementGlaneurRepository;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoder;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 /**
@@ -48,6 +50,23 @@ class ApiController extends AbstractController
                     'perimetre',
                     'lieu',
                     'evenementGlaneurs' => ['effectif', 'evenement' => ['id']]
+                ]]
+            );
+        } else if ($user->getType() == 'agriculteur') {
+            $data = $serializer->serialize(
+                $user,
+                'json',
+                [AbstractNormalizer::ATTRIBUTES => [
+                    'id',
+                    'username',
+                    'type',
+                    'email',
+                    'lastname',
+                    'firstname',
+                    'phone',
+                    'perimetre',
+                    'lieu',
+                    'evenements' => ['id']
                 ]]
             );
         } else {
@@ -182,7 +201,6 @@ class ApiController extends AbstractController
      */
     public function evenementGlaneur_new(Request $request, EvenementRepository $evenementRepository): Response
     {
-        $user = $this->getUser();
         $data = json_decode($request->getContent(), true);
 
         $evenementGlaneur = new EvenementGlaneur();
@@ -266,12 +284,12 @@ class ApiController extends AbstractController
     /**
      * @Route("/utilisateur/edit/pass", name="utilisateur_edit_pass")
      */
-    public function utilisateur_edit_pass(Request $request,UserPasswordEncoderInterface $passwordEncoder): Response
+    public function utilisateur_edit_pass(Request $request, UserPasswordEncoderInterface $passwordEncoder): Response
     {
         $user = $this->getUser();
         $data = json_decode($request->getContent(), true);
-        
-        $password = $passwordEncoder->encodePassword($user,$data['password']);
+
+        $password = $passwordEncoder->encodePassword($user, $data['password']);
         $user->setPassword($password);
 
         $entityManager = $this->getDoctrine()->getManager();
@@ -280,6 +298,75 @@ class ApiController extends AbstractController
         $response = new Response('', 204);
 
         $response->headers->set('Content-Type', 'application/json');
+
+        return $response;
+    }
+
+    /**
+     * @Route("/evenement/new", name="evenement_new")
+     */
+    public function evenement_new(Request $request,  SerializerInterface $serializer)
+    {
+        $data = json_decode($request->getContent(), true);
+        $evenement = new Evenement();
+
+        $evenement = $serializer->deserialize(
+            json_encode($data),
+            Evenement::class,
+            'json',
+            [AbstractNormalizer::ATTRIBUTES => [
+                'date',
+                'evenementLegumes' => ['volume', 'legume' => ['name']],
+                'deroulements' => ['heure', 'description'],
+                'rendezvouses' => ['heure', 'description']
+            ]]
+        );
+        $evenement->setAgriculteur($this->getUser())
+            ->setLieu($this->getDoctrine()->getRepository(Lieu::class)->find($data['lieu']['id']))
+            ->setEnabled(true);
+
+        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager->persist($evenement);
+        $entityManager->flush();
+
+        
+        $response = new Response('', 204);
+        $response->headers->set('Content-Type', 'application/json');
+        return $response;
+    }
+
+    /**
+     * @Route("/evenement/edit/{id<\d+>}", name="evenement_edit")
+     */
+    public function evenement_edit(Request $request,  SerializerInterface $serializer, int $id)
+    {
+        $data = json_decode($request->getContent(), true);
+        $evenement = $this->getDoctrine()->getRepository(Evenement::class)->find($id);
+
+        $temp_evenement = $serializer->deserialize(
+            json_encode($data),
+            Evenement::class,
+            'json',
+            [AbstractNormalizer::ATTRIBUTES => [
+                'evenementLegumes' => ['volume', 'legume' => ['name']],
+                'deroulements' => ['heure', 'description'],
+                'rendezvouses' => ['heure', 'description']
+            ]]
+        );
+
+        $evenement->setEvenementLegumes($temp_evenement->getEvenementLegumes())
+            ->setDeroulements($temp_evenement->getDeroulements())
+            ->setRendezvouses($temp_evenement->getRendezvouses());
+
+        $evenement->setDate(new \DateTime($data['date']))
+            ->setAgriculteur($this->getUser())
+            ->setLieu($this->getDoctrine()->getRepository(Lieu::class)->find($data['lieu']['id']))
+            ->setEnabled(true);
+
+        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager->persist($evenement);
+        $entityManager->flush();
+        $response = new Response('', 204);
 
         return $response;
     }

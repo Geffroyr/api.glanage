@@ -26,7 +26,7 @@ class Evenement
     private $agriculteur;
 
     /**
-     * @ORM\OneToOne(targetEntity="App\Entity\Lieu", cascade={"all"})
+     * @ORM\ManyToOne(targetEntity="App\Entity\Lieu", cascade={"all"})
      * @ORM\JoinColumn(nullable=false)
      */
     private $lieu;
@@ -62,6 +62,11 @@ class Evenement
      * @ORM\OneToMany(targetEntity="App\Entity\Rendezvous", mappedBy="evenement", orphanRemoval=true, cascade={"all"})
      */
     private $rendezvouses;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $enabled;
 
     public function __construct()
     {
@@ -101,9 +106,15 @@ class Evenement
         return $this;
     }
 
+    /* public function getDate()
+    {
+        return $this->date;
+    } */
+
     public function getDate()
     {
-        return $this->date? $this->date->format('d/m'):$this->date;
+        /* return $this->date? $this->date->format('Y-m-d'):$this->date; */
+        return $this->date;
     }
 
     public function setDate(\DateTimeInterface $date): self
@@ -119,6 +130,16 @@ class Evenement
     public function getEvenementLegumes(): Collection
     {
         return $this->evenementLegumes;
+    }
+
+    public function setEvenementLegumes($evenementLegumes):self
+    {
+        $this->evenementLegumes->clear();
+        foreach($evenementLegumes as $evenementLegume){
+            $this->addEvenementLegume($evenementLegume);
+        }
+
+        return $this;
     }
 
     public function addEvenementLegume(EvenementLegume $evenementLegume): self
@@ -209,9 +230,19 @@ class Evenement
     /**
      * @return Collection|Deroulement[]
      */
-    public function getDeroulements(): Collection
+    public function getDeroulements()
     {
-        return $this->deroulements;
+        return count($this->deroulements)>0? $this->deroulements:[];
+    }
+
+    public function setDeroulements($deroulements):self
+    {
+        $this->deroulements->clear();
+        foreach($deroulements as $deroulement){
+            $this->addDeroulement($deroulement);
+        }
+
+        return $this;
     }
 
     public function addDeroulement(Deroulement $deroulement): self
@@ -240,9 +271,20 @@ class Evenement
     /**
      * @return Collection|Rendezvous[]
      */
-    public function getRendezvouses(): Collection
+    public function getRendezvouses()
     {
-        return $this->rendezvouses;
+        return count($this->rendezvouses)>0? $this->rendezvouses:[];
+        /* return $this->rendezvouses; */
+    }
+
+    public function setRendezvouses($rendezvouses):self
+    {
+        $this->rendezvouses->clear();
+        foreach($rendezvouses as $rendezvous){
+            $this->addRendezvouse($rendezvous);
+        }
+
+        return $this;
     }
 
     public function addRendezvouse(Rendezvous $rendezvouse): self
@@ -266,5 +308,21 @@ class Evenement
         }
 
         return $this;
+    }
+
+    public function getEnabled(): ?bool
+    {
+        return $this->enabled;
+    }
+
+    public function setEnabled(bool $enabled): self
+    {
+        $this->enabled = $enabled;
+
+        return $this;
+    }
+    public function isEnabled(): ?bool
+    {
+        return $this->enabled;
     }
 }

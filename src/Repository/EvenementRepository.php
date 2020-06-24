@@ -30,6 +30,7 @@ class EvenementRepository extends ServiceEntityRepository {
                         ->andWhere('l.longitude < :longitude_max')
                         ->andWhere('l.longitude > :longitude_min')
                         ->andWhere('e.date > :today')
+                        ->andWhere('e.enabled = true')
                         /* ->setParameter('latitude_max', $glaneur->getLieu()->getLatitude()+$latitude_coef)
                           ->setParameter('latitude_min', $glaneur->getLieu()->getLatitude()-$latitude_coef)
                           ->setParameter('longitude_max', $glaneur->getLieu()->getLongitude()+$longitude_coef)

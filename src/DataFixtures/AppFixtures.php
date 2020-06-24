@@ -33,7 +33,8 @@ class AppFixtures extends Fixture
                     ->setEmail('Aindiv' . $i . 'Aindiv.Aindiv')
                     ->setPhone('0' . $i . '0' . $i . '0' . $i . '0' . $i . '0' . $i)
                     ->setEmail('Aindiv' . $i . '@Aindiv.Aindiv')
-                    ->setPassword($this->passwordEncoder->encodePassword($agriculteur,'Aindiv' . $i));
+                    ->setPassword($this->passwordEncoder->encodePassword($agriculteur,'Aindiv' . $i))
+                    ->setEnabled(True);
             $evenement = new Evenement();
             $deroulement = new Deroulement();
             $deroulement->setHeure(new \DateTime('@' . strtotime('0900')))
@@ -63,7 +64,8 @@ class AppFixtures extends Fixture
                     ->setEmail('Gindiv' . $i . '@Gindiv.Gindiv')
                     ->setPhone('1' . $i . '1' . $i . '1' . $i . '1' . $i . '1' . $i)
                     ->setEmail('Gindiv' . $i . '@Gindiv.Gindiv')
-                    ->setPassword($this->passwordEncoder->encodePassword($glaneur,'Gindiv' . $i));
+                    ->setPassword($this->passwordEncoder->encodePassword($glaneur,'Gindiv' . $i))
+                    ->setEnabled(True);
             $evenementGlaneur = new EvenementGlaneur();
             $evenementGlaneur->setGlaneur($glaneur)
                     ->setEvenement($evenement)
@@ -76,7 +78,8 @@ class AppFixtures extends Fixture
                     ->setEmail('Rorg' . $i . '@Rorg.Rorg')
                     ->setPhone('2' . $i . '2' . $i . '2' . $i . '2' . $i . '2' . $i)
                     ->setEmail('Rorg' . $i . '@Rorg.Rorg')
-                    ->setPassword($this->passwordEncoder->encodePassword($recuperateur,'Rorg' . $i));
+                    ->setPassword($this->passwordEncoder->encodePassword($recuperateur,'Rorg' . $i))
+                    ->setEnabled(True);
             $evenementRecuperateur = new EvenementRecuperateur();
             $evenementRecuperateur->setEvenement($evenement)
                     ->setLegume($legume)
