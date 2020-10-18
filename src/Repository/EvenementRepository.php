@@ -43,7 +43,7 @@ class EvenementRepository extends ServiceEntityRepository {
                           'latitude_min' => $glaneur->getLieu()->getLatitude() - $latitude_coef,
                           'longitude_max' => $glaneur->getLieu()->getLongitude() + $longitude_coef,
                           'longitude_min' => $glaneur->getLieu()->getLongitude() - $longitude_coef])
-                        ->orderBy('e.id', 'ASC')
+                        ->orderBy('e.date', 'ASC')
                         ->setMaxResults(10)
                         ->getQuery()
                         ->getResult();

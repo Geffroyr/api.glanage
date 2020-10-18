@@ -118,7 +118,7 @@ class ApiController extends AbstractController
                 'date',
                 'lieu' => ['id', 'commune', 'latitude', 'longitude', 'codePostal'],
                 'evenementLegumes' => ['volume', 'legume' => ['name']],
-                'agriculteur' => ['username'],
+                'agriculteur' => ['id', 'username'],
                 'deroulements' => ['heure', 'description'],
                 'rendezvouses' => ['heure', 'description']
             ]]
@@ -142,9 +142,28 @@ class ApiController extends AbstractController
                 'date',
                 'lieu' => ['id', 'commune', 'latitude', 'longitude', 'codePostal'],
                 'evenementLegumes' => ['volume', 'legume' => ['name']],
-                'agriculteur' => ['username'],
+                'agriculteur' => ['id', 'username'],
                 'deroulements' => ['heure', 'description'],
                 'rendezvouses' => ['heure', 'description']
+            ]]
+        );
+        $response = new Response($data);
+        $response->headers->set('Content-Type', 'application/json');
+        return $response;
+    }
+
+    /**
+     * @Route("/agriculteur/list", name="agriculteur_list")
+     */
+    public function agriculteur_list(SerializerInterface $serializer)
+    {
+        $agriculteurs = $this->getDoctrine()->getRepository(Agriculteur::class)->findAll();
+        $data = $serializer->serialize(
+            $agriculteurs,
+            'json',
+            [AbstractNormalizer::ATTRIBUTES => [
+                'id',
+                'username'
             ]]
         );
         $response = new Response($data);
@@ -321,15 +340,21 @@ class ApiController extends AbstractController
                 'rendezvouses' => ['heure', 'description']
             ]]
         );
-        $evenement->setAgriculteur($this->getUser())
-            ->setLieu($this->getDoctrine()->getRepository(Lieu::class)->find($data['lieu']['id']))
+
+        $evenement->setLieu($this->getDoctrine()->getRepository(Lieu::class)->find($data['lieu']['id']))
             ->setEnabled(true);
+
+        if ($this->isGranted('ROLE_AGRICULTEUR')) {
+            $evenement->setAgriculteur($this->getUser());
+        } else if ('ROLE_ADMIN') {
+            $evenement->setAgriculteur($this->getDoctrine()->getRepository(Agriculteur::class)->find($data['agriculteur']));
+        }
 
         $entityManager = $this->getDoctrine()->getManager();
         $entityManager->persist($evenement);
         $entityManager->flush();
 
-        
+
         $response = new Response('', 204);
         $response->headers->set('Content-Type', 'application/json');
         return $response;
@@ -359,9 +384,14 @@ class ApiController extends AbstractController
             ->setRendezvouses($temp_evenement->getRendezvouses());
 
         $evenement->setDate(new \DateTime($data['date']))
-            ->setAgriculteur($this->getUser())
             ->setLieu($this->getDoctrine()->getRepository(Lieu::class)->find($data['lieu']['id']))
             ->setEnabled(true);
+
+        if ($this->isGranted('ROLE_AGRICULTEUR')) {
+            $evenement->setAgriculteur($this->getUser());
+        } else if ('ROLE_ADMIN') {
+            $evenement->setAgriculteur($this->getDoctrine()->getRepository(Agriculteur::class)->find($data['agriculteur']));
+        }
 
         $entityManager = $this->getDoctrine()->getManager();
         $entityManager->persist($evenement);

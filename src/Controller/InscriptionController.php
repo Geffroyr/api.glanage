@@ -2,7 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\Admin;
+use App\Entity\Agriculteur;
 use App\Entity\Glaneur;
+use App\Entity\Recuperateur;
 use App\Entity\Lieu;
 use App\Entity\Utilisateur;
 use App\Entity\ValidateEmail;
@@ -26,20 +29,46 @@ class InscriptionController extends AbstractController
 {
 
     /**
-     * @Route("register", name="utilisateur_new")
+     * @Route("register", name="register")
+     */
+    public function register(Request $request, EntityManagerInterface $entityManager, UserPasswordEncoderInterface $encoder, MailerInterface $mailer)
+    {
+
+        $data = json_decode($request->getContent(), true);
+        $utilisateur = new Glaneur();
+
+        $utilisateur->setFirstname($data['firstname'])
+            ->setLastname($data['lastname'])
+            ->setUsername($data['firstname'] . ' ' . $data['lastname'])
+            ->setEmail($data['email'])
+            ->setPerimetre(50)
+            ->setLieu($this->getDoctrine()->getRepository(Lieu::class)->findOneBy(['commune' => 'Rennes']));
+        $passwordCrypte = $encoder->encodePassword($utilisateur, $data['password']);
+        $utilisateur->setPassword($passwordCrypte)
+            ->setEnabled(False);
+        $entityManager->persist($utilisateur);
+        $entityManager->flush();
+
+        return $this->processSendingEmail($request, $mailer, $entityManager, $utilisateur);
+    }
+
+    /**
+     * @Route("api/utilisateur/new", name="utilisateur_new")
      */
     public function utilisateur_new(Request $request, EntityManagerInterface $entityManager, UserPasswordEncoderInterface $encoder, MailerInterface $mailer)
     {
 
         $data = json_decode($request->getContent(), true);
 
-        $utilisateur = new Glaneur();
+        $class = 'App\Entity\\' . $data['type'];
+        $utilisateur = new $class();
+
         $utilisateur->setFirstname($data['firstname'])
             ->setLastname($data['lastname'])
-            ->setUsername($data['firstname'].' '.$data['lastname'])
+            ->setUsername($data['username'])
             ->setEmail($data['email'])
             ->setPerimetre(50)
-            ->setLieu($this->getDoctrine()->getRepository(Lieu::class)->findOneBy(['commune'=>'Rennes']));
+            ->setLieu($this->getDoctrine()->getRepository(Lieu::class)->findOneBy(['commune' => 'Rennes']));
         $passwordCrypte = $encoder->encodePassword($utilisateur, $data['password']);
         $utilisateur->setPassword($passwordCrypte)
             ->setEnabled(False);

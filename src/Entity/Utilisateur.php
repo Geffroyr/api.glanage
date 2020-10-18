@@ -28,7 +28,7 @@ class Utilisateur implements UserInterface
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=180, unique=true)
+     * @ORM\Column(type="string", length=180)
      */
     private $username;
 
@@ -44,7 +44,7 @@ class Utilisateur implements UserInterface
     private $password;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, unique=true)
      */
     private $email;
 
@@ -80,7 +80,7 @@ class Utilisateur implements UserInterface
 
     public function getType(): ?string {
         if ($this->getRoles()[0]=='ROLE_GLANEUR'){
-            return 'glaneur';
+            return 'admin';
         } else if($this->getRoles()[0]=='ROLE_AGRICULTEUR') {
             return 'agriculteur';
         } else if ($this->getRoles()[0]=='ROLE_RECUPERATEUR'){
