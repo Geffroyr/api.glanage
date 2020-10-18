@@ -23,7 +23,7 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoder;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
-
+use Goutte\Client;
 /**
  * @Route("/api")
  */
@@ -108,7 +108,9 @@ class ApiController extends AbstractController
      */
     public function evenement_list(SerializerInterface $serializer, EvenementRepository $evenementRepository)
     {
-        $evenements = $evenementRepository->findByDistance($this->getUser());
+        if($this->getUser()->getLieu()!=NULL){
+            $evenements = $evenementRepository->findByDistance($this->getUser());
+        
         //$evenements = $evenementRepository->findAll();
         $data = $serializer->serialize(
             $evenements,
@@ -125,6 +127,9 @@ class ApiController extends AbstractController
         );
         $response = new Response($data);
         $response->headers->set('Content-Type', 'application/json');
+    } else {
+        $response = new Response('',400);
+    }
         return $response;
     }
 
@@ -398,6 +403,43 @@ class ApiController extends AbstractController
         $entityManager->flush();
         $response = new Response('', 204);
 
+        return $response;
+    }
+    /**
+     * @Route("/scraper", name="scraper")
+     */
+    public function index2(SerializerInterface $serializer)
+    {
+        $actualites = $this->getDoctrine()->getRepository(Actualite::class)->findAll();
+        $entityManager = $this->getDoctrine()->getManager();
+        foreach ($actualites as $actualite) {
+            $entityManager->remove($actualite);
+        }
+        $entityManager->flush();
+        $client = new Client();
+        $crawler = $client->request('GET', 'http://glanage-solidaire.fr');
+        $crawler->filter('.actualites li')->each(function ($node) {
+            $lien = $node->filter('a')->last()->attr('href');
+            $client2 = new Client();
+            $crawler2 = $client2->request('GET', $lien);
+            $actualite = new Actualite();
+            $actualite->setTitre($crawler2->filter('.titre')->text())
+                ->setContenu($crawler2->filter('.contenu')->text())
+                ->setDate(date_create_from_format('d/m/y', $crawler2->filter('.date')->text()))
+                ->setLien($lien);
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->persist($actualite);
+            $entityManager->flush();
+            $crawler2->filter('.galerie img')->each(function ($node2) {
+                $actualite = $this->getDoctrine()->getRepository(Actualite::class)->findOneBy(array(), array('id' => 'DESC'), 1, 0);
+                $actualite->addImage($node2->attr('src'));
+            });
+        });
+        //$actualites = $this->getDoctrine()->getRepository(Actualite::class)->findAll();
+        //$data = $serializer->serialize($actualites, 'json');
+        //$response = new Response($data);
+        $response = new Response('',204);
+        $response->headers->set('Content-Type', 'application/json');
         return $response;
     }
 }

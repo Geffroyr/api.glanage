@@ -17,7 +17,7 @@ use Symfony\Component\Validator\Constraints\Length;
 class ScraperController extends AbstractController
 {
 
-    /**
+    /*
      * @Route("/scraper", name="scraper")
      */
     public function index(SerializerInterface $serializer)
@@ -51,8 +51,8 @@ class ScraperController extends AbstractController
         $response->headers->set('Content-Type', 'application/json');
         return $response;
     }
-    /**
-     * @Route("/scraper2", name="scraper2")
+    /*
+     * @Route("/scraper", name="scraper")
      */
     public function index2(SerializerInterface $serializer)
     {
@@ -81,9 +81,10 @@ class ScraperController extends AbstractController
                 $actualite->addImage($node2->attr('src'));
             });
         });
-        $actualites = $this->getDoctrine()->getRepository(Actualite::class)->findAll();
-        $data = $serializer->serialize($actualites, 'json');
-        $response = new Response($data);
+        //$actualites = $this->getDoctrine()->getRepository(Actualite::class)->findAll();
+        //$data = $serializer->serialize($actualites, 'json');
+        //$response = new Response($data);
+        $response = new Response('',204);
         $response->headers->set('Content-Type', 'application/json');
         return $response;
     }
