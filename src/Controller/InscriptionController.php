@@ -2,15 +2,17 @@
 
 namespace App\Controller;
 
-use App\Entity\Admin;
-use App\Entity\Agriculteur;
-use App\Entity\Glaneur;
-use App\Entity\Recuperateur;
 use App\Entity\Lieu;
+use App\Entity\Admin;
+use App\Entity\Glaneur;
+use App\Entity\Agriculteur;
 use App\Entity\Utilisateur;
+use App\Entity\Recuperateur;
+use App\Entity\ResetPassword;
 use App\Entity\ValidateEmail;
 use Symfony\Component\Mime\Address;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\UtilisateurRepository;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Mailer\MailerInterface;
@@ -35,6 +37,9 @@ class InscriptionController extends AbstractController
     {
 
         $data = json_decode($request->getContent(), true);
+
+        $data['password'] = 'root';
+
         $utilisateur = new Glaneur();
 
         $utilisateur->setFirstname($data['firstname'])
@@ -81,19 +86,22 @@ class InscriptionController extends AbstractController
     /**
      * @Route("/validate-email", name="app_validate_email")
      */
-    public function validate(Request $request, EntityManagerInterface $entityManager): Response
+    public function validate(Request $request, EntityManagerInterface $entityManager, UserPasswordEncoderInterface $encoder ): Response
     {
         $data = json_decode($request->getContent(), true);
 
-        $user = $this->getDoctrine()->getRepository(Utilisateur::class)->findOneBy(['email' => $data['email']]);
+        $utilisateur = $this->getDoctrine()->getRepository(Utilisateur::class)->findOneBy(['email' => $data['email']]);
         $token = $data['token'];
 
-        $validateEmail = $this->getDoctrine()->getRepository(ValidateEmail::class)->findOneBy(['utilisateur' => $user]);
+        $validateEmail = $this->getDoctrine()->getRepository(ValidateEmail::class)->findOneBy(['utilisateur' => $utilisateur]);
 
         $ExpiresAt = $validateEmail->getRequestedAt()->modify('+3600 second');
         if ($token === $validateEmail->getToken() && $ExpiresAt > new \DateTime()) {
-            $user->setEnabled(True);
-            $entityManager->persist($user);
+ 
+            $passwordCrypte = $encoder->encodePassword($utilisateur, $data['password']);
+            $utilisateur->setPassword($passwordCrypte)
+                ->setEnabled(True);
+            $entityManager->persist($utilisateur);
             $entityManager->remove($validateEmail);
             $entityManager->flush();
 
@@ -139,5 +147,67 @@ class InscriptionController extends AbstractController
         $response = new Response('', 204);
         $response->headers->set('Content-Type', 'application/json');
         return $response;
+    }
+
+    /**
+     * @Route("/email_check", name="email_check")
+     */
+    public function email_check(Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        $utilisateur = $this->getDoctrine()->getRepository(Utilisateur::class)->findOneBy(['email' => $data['email']]);
+
+        if ($utilisateur) {
+            if ($utilisateur->isEnabled()) {
+                $response = new Response('', 204);
+            } else {
+                $response = new Response('Unverified email.', 401);
+            }
+        } else {
+            $response = new Response('Unexisting email.', 401);
+        }
+
+        $response->headers->set('Content-Type', 'application/json');
+
+        return $response;
+    }
+
+    /**
+     * @Route("/email_check_token", name="email_check_token")
+     */
+    public function emailCheckToken(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $data = json_decode($request->getContent(), true);
+
+        $user = $this->getDoctrine()->getRepository(Utilisateur::class)->findOneBy(['email' => $data['email']]);
+        $token = $data['token'];
+        $validateEmail = $this->getDoctrine()->getRepository(ValidateEmail::class)->findOneBy(['utilisateur' => $user]);
+
+        $ExpiresAt = $validateEmail->getRequestedAt()->modify('+3600 second');
+        if ($token === $validateEmail->getToken() && $ExpiresAt > new \DateTime()) {
+            return new Response('', 204);
+        } else {
+            return new Response('Code invalide ou expiré.', 403);
+        }
+    }
+
+    /**
+     * @Route("/password_check_token", name="password_check_token")
+     */
+    public function passwordCheckToken(Request $request, EntityManagerInterface $entityManager, UserPasswordEncoderInterface $encoder ): Response
+    {
+        $data = json_decode($request->getContent(), true);
+
+        $user = $this->getDoctrine()->getRepository(Utilisateur::class)->findOneBy(['email' => $data['email']]);
+        $token = $data['token'];
+
+        $resetPassword = $this->getDoctrine()->getRepository(ResetPassword::class)->findOneBy(['utilisateur' => $user]);
+
+        $ExpiresAt = $resetPassword->getRequestedAt()->modify('+3600 second');
+        if ($token === $resetPassword->getToken() && $ExpiresAt > new \DateTime()) {
+            return new Response('', 204);
+        } else {
+            return new Response('Code invalide ou expiré.', 403);
+        }
     }
 }

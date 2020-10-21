@@ -15,6 +15,7 @@ use App\Repository\LieuRepository;
 use App\Repository\EvenementRepository;
 use Symfony\Component\HttpFoundation\Request;
 use App\Repository\EvenementGlaneurRepository;
+use App\Repository\UtilisateurRepository;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -442,4 +443,5 @@ class ApiController extends AbstractController
         $response->headers->set('Content-Type', 'application/json');
         return $response;
     }
+
 }
