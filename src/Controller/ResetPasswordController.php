@@ -19,10 +19,6 @@ use SymfonyCasts\Bundle\ResetPassword\ResetPasswordHelperInterface;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use SymfonyCasts\Bundle\ResetPassword\Controller\ResetPasswordControllerTrait;
 
-/*
- * @Route("/api")
- */
-
 class ResetPasswordController extends AbstractController
 {
     /**

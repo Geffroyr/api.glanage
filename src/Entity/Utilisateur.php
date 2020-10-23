@@ -80,7 +80,7 @@ class Utilisateur implements UserInterface
 
     public function getType(): ?string {
         if ($this->getRoles()[0]=='ROLE_GLANEUR'){
-            return 'admin';
+            return 'glaneur';
         } else if($this->getRoles()[0]=='ROLE_AGRICULTEUR') {
             return 'agriculteur';
         } else if ($this->getRoles()[0]=='ROLE_RECUPERATEUR'){

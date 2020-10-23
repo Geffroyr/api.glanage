@@ -22,10 +22,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use SymfonyCasts\Bundle\ResetPassword\ResetPasswordHelperInterface;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use SymfonyCasts\Bundle\ResetPassword\Controller\ResetPasswordControllerTrait;
-
-/*
- * @Route("/api")
- */
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 
 class InscriptionController extends AbstractController
 {
@@ -58,6 +55,7 @@ class InscriptionController extends AbstractController
     }
 
     /**
+     * @Security("is_granted('ROLE_ADMIN')")
      * @Route("api/utilisateur/new", name="utilisateur_new")
      */
     public function utilisateur_new(Request $request, EntityManagerInterface $entityManager, UserPasswordEncoderInterface $encoder, MailerInterface $mailer)
@@ -65,6 +63,8 @@ class InscriptionController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
+        $data['password'] = 'root';
+        
         $class = 'App\Entity\\' . $data['type'];
         $utilisateur = new $class();
 

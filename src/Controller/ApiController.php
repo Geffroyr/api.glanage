@@ -2,30 +2,36 @@
 
 namespace App\Controller;
 
+use Goutte\Client;
 use App\Entity\Lieu;
+use App\Entity\Legume;
 use App\Entity\Glaneur;
 use App\Entity\Actualite;
-use App\Entity\Agriculteur;
 use App\Entity\Evenement;
+use App\Entity\Agriculteur;
 use App\Entity\Utilisateur;
 use App\Form\EvenementType;
 use App\Form\GlaneurZoneType;
 use App\Entity\EvenementGlaneur;
 use App\Repository\LieuRepository;
+use App\Entity\EvenementRecuperateur;
 use App\Repository\EvenementRepository;
+use App\Repository\UtilisateurRepository;
 use Symfony\Component\HttpFoundation\Request;
 use App\Repository\EvenementGlaneurRepository;
-use App\Repository\UtilisateurRepository;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Serializer\SerializerInterface;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoder;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
-use Goutte\Client;
+
 /**
+ * @Security("is_granted('IS_AUTHENTICATED_FULLY')")
  * @Route("/api")
  */
 class ApiController extends AbstractController
@@ -36,57 +42,79 @@ class ApiController extends AbstractController
     public function utilisateur_get(SerializerInterface $serializer)
     {
         $user = $this->getUser();
-        if ($user->getType() == 'glaneur') {
-            $data = $serializer->serialize(
-                $user,
-                'json',
-                [AbstractNormalizer::ATTRIBUTES => [
-                    'id',
-                    'username',
-                    'type',
-                    'email',
-                    'lastname',
-                    'firstname',
-                    'phone',
-                    'perimetre',
-                    'lieu',
-                    'evenementGlaneurs' => ['effectif', 'evenement' => ['id']]
-                ]]
-            );
-        } else if ($user->getType() == 'agriculteur') {
-            $data = $serializer->serialize(
-                $user,
-                'json',
-                [AbstractNormalizer::ATTRIBUTES => [
-                    'id',
-                    'username',
-                    'type',
-                    'email',
-                    'lastname',
-                    'firstname',
-                    'phone',
-                    'perimetre',
-                    'lieu',
-                    'evenements' => ['id']
-                ]]
-            );
-        } else {
-            $data = $serializer->serialize(
-                $user,
-                'json',
-                [AbstractNormalizer::ATTRIBUTES => [
-                    'id',
-                    'username',
-                    'type',
-                    'email',
-                    'lastname',
-                    'firstname',
-                    'phone',
-                    'perimetre',
-                    'lieu'
-                ]]
-            );
+        switch ($user->getType()) {
+            case 'glaneur':
+                $data = $serializer->serialize(
+                    $user,
+                    'json',
+                    [AbstractNormalizer::ATTRIBUTES => [
+                        'id',
+                        'username',
+                        'type',
+                        'email',
+                        'lastname',
+                        'firstname',
+                        'phone',
+                        'perimetre',
+                        'lieu',
+                        'evenementGlaneurs' => ['effectif', 'evenement' => ['id']]
+                    ]]
+                );
+                break;
+            case 'agriculteur':
+                $data = $serializer->serialize(
+                    $user,
+                    'json',
+                    [AbstractNormalizer::ATTRIBUTES => [
+                        'id',
+                        'username',
+                        'type',
+                        'email',
+                        'lastname',
+                        'firstname',
+                        'phone',
+                        'perimetre',
+                        'lieu',
+                        'evenements' => ['id']
+                    ]]
+                );
+                break;
+            case 'recuperateur':
+                $data = $serializer->serialize(
+                    $user,
+                    'json',
+                    [AbstractNormalizer::ATTRIBUTES => [
+                        'id',
+                        'username',
+                        'type',
+                        'email',
+                        'lastname',
+                        'firstname',
+                        'phone',
+                        'perimetre',
+                        'lieu',
+                        'evenementRecuperateurs' => ['legume' => ['id', 'name'], 'evenement' => ['id'], 'volume']
+                    ]]
+                );
+                break;
+            default:
+                $data = $serializer->serialize(
+                    $user,
+                    'json',
+                    [AbstractNormalizer::ATTRIBUTES => [
+                        'id',
+                        'username',
+                        'type',
+                        'email',
+                        'lastname',
+                        'firstname',
+                        'phone',
+                        'perimetre',
+                        'lieu'
+                    ]]
+                );
         }
+
         $response = new Response($data);
         $response->headers->set('Content-Type', 'application/json');
         return $response;
@@ -109,28 +137,28 @@ class ApiController extends AbstractController
      */
     public function evenement_list(SerializerInterface $serializer, EvenementRepository $evenementRepository)
     {
-        if($this->getUser()->getLieu()!=NULL){
+        if ($this->getUser()->getLieu() != NULL) {
             $evenements = $evenementRepository->findByDistance($this->getUser());
-        
-        //$evenements = $evenementRepository->findAll();
-        $data = $serializer->serialize(
-            $evenements,
-            'json',
-            [AbstractNormalizer::ATTRIBUTES => [
-                'id',
-                'date',
-                'lieu' => ['id', 'commune', 'latitude', 'longitude', 'codePostal'],
-                'evenementLegumes' => ['volume', 'legume' => ['name']],
-                'agriculteur' => ['id', 'username'],
-                'deroulements' => ['heure', 'description'],
-                'rendezvouses' => ['heure', 'description']
-            ]]
-        );
-        $response = new Response($data);
-        $response->headers->set('Content-Type', 'application/json');
-    } else {
-        $response = new Response('',400);
-    }
+
+            //$evenements = $evenementRepository->findAll();
+            $data = $serializer->serialize(
+                $evenements,
+                'json',
+                [AbstractNormalizer::ATTRIBUTES => [
+                    'id',
+                    'date',
+                    'lieu' => ['id', 'commune', 'latitude', 'longitude', 'codePostal'],
+                    'evenementLegumes' => ['volume', 'legume' => ['id', 'name']],
+                    'agriculteur' => ['id', 'username'],
+                    'deroulements' => ['heure', 'description'],
+                    'rendezvouses' => ['heure', 'description']
+                ]]
+            );
+            $response = new Response($data);
+            $response->headers->set('Content-Type', 'application/json');
+        } else {
+            $response = new Response('', 400);
+        }
         return $response;
     }
 
@@ -147,7 +175,7 @@ class ApiController extends AbstractController
                 'id',
                 'date',
                 'lieu' => ['id', 'commune', 'latitude', 'longitude', 'codePostal'],
-                'evenementLegumes' => ['volume', 'legume' => ['name']],
+                'evenementLegumes' => ['volume', 'legume' => ['id', 'name']],
                 'agriculteur' => ['id', 'username'],
                 'deroulements' => ['heure', 'description'],
                 'rendezvouses' => ['heure', 'description']
@@ -159,6 +187,7 @@ class ApiController extends AbstractController
     }
 
     /**
+     * @Security("is_granted('ROLE_ADMIN')")
      * @Route("/agriculteur/list", name="agriculteur_list")
      */
     public function agriculteur_list(SerializerInterface $serializer)
@@ -222,6 +251,7 @@ class ApiController extends AbstractController
     }
 
     /**
+     * @Security("is_granted('ROLE_GLANEUR')")
      * @Route("/evenementGlaneur/new", name="evenementGlaneur_new")
      */
     public function evenementGlaneur_new(Request $request, EvenementRepository $evenementRepository): Response
@@ -244,6 +274,7 @@ class ApiController extends AbstractController
     }
 
     /**
+     * @Security("is_granted('ROLE_GLANEUR')")
      * @Route("/evenementGlaneur/edit", name="evenementGlaneur_edit")
      */
     public function evenementGlaneur_edit(Request $request, EvenementRepository $evenementRepository, EvenementGlaneurRepository $evenementGlaneurRepository): Response
@@ -265,6 +296,7 @@ class ApiController extends AbstractController
     }
 
     /**
+     * @Security("is_granted('ROLE_GLANEUR')")
      * @Route("/evenementGlaneur/delete", name="evenementGlaneur_delete")
      */
     public function evenementGlaneur_delete(Request $request, EvenementRepository $evenementRepository, EvenementGlaneurRepository $evenementGlaneurRepository): Response
@@ -276,6 +308,83 @@ class ApiController extends AbstractController
 
         $entityManager = $this->getDoctrine()->getManager();
         $entityManager->remove($evenementGlaneur);
+        $entityManager->flush();
+        $response = new Response('', 204);
+
+        $response->headers->set('Content-Type', 'application/json');
+
+        return $response;
+    }
+    /**
+     * @Security("is_granted('ROLE_RECUPERATEUR')")
+     * @Route("/evenementRecuperateur/new", name="evenementRecuperateur_new")
+     */
+    public function evenementRecuperateur_new(Request $request, EvenementRepository $evenementRepository): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        $entityManager = $this->getDoctrine()->getManager();
+
+        for ($i = 0; $i < count($data); $i++) {
+            $evenementRecuperateur = new EvenementRecuperateur();
+            $evenementRecuperateur->setRecuperateur($this->getUser())
+                ->setEvenement($evenementRepository->find($data[$i]['evenement']['id']))
+                ->setLegume($this->getDoctrine()->getRepository(Legume::class)->find($data[$i]['legume']['id']))
+                ->setVolume($data[$i]['volume']);
+
+
+            $entityManager->persist($evenementRecuperateur);
+        }
+        $entityManager->flush();
+        $response = new Response('', 204);
+
+        $response->headers->set('Content-Type', 'application/json');
+
+        return $response;
+    }
+    /**
+     * @Security("is_granted('ROLE_RECUPERATEUR')")
+     * @Route("/evenementRecuperateur/edit", name="evenementRecuperateur_edit")
+     */
+    public function evenementRecuperateur_edit(Request $request, EvenementRepository $evenementRepository): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        $entityManager = $this->getDoctrine()->getManager();
+
+        for ($i = 0; $i < count($data); $i++) {
+            $evenementRecuperateur = $this->getDoctrine()->getRepository(EvenementRecuperateur::class)
+                ->findOneBy([
+                    'evenement' => $evenementRepository->find($data[$i]['evenement']['id']),
+                    'recuperateur' => $this->getUser(),
+                    'legume' => $this->getDoctrine()->getRepository(Legume::class)->find($data[$i]['legume']['id'])
+                ]);
+            $evenementRecuperateur->setVolume($data[$i]['volume']);
+            $entityManager->persist($evenementRecuperateur);
+        }
+        $entityManager->flush();
+        $response = new Response('', 204);
+
+        $response->headers->set('Content-Type', 'application/json');
+
+        return $response;
+    }
+    /**
+     * @Security("is_granted('ROLE_RECUPERATEUR')")
+     * @Route("/evenementRecuperateur/delete", name="evenementRecuperateur_delete")
+     */
+    public function evenementRecuperateur_delete(Request $request, EvenementRepository $evenementRepository): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        $entityManager = $this->getDoctrine()->getManager();
+
+        for ($i = 0; $i < count($data); $i++) {
+            $evenementRecuperateur = $this->getDoctrine()->getRepository(EvenementRecuperateur::class)
+                ->findOneBy([
+                    'evenement' => $evenementRepository->find($data[$i]['evenement']['id']),
+                    'recuperateur' => $this->getUser(),
+                    'legume' => $this->getDoctrine()->getRepository(Legume::class)->find($data[$i]['legume']['id'])
+                ]);
+            $entityManager->remove($evenementRecuperateur);
+        }
         $entityManager->flush();
         $response = new Response('', 204);
 
@@ -328,6 +437,7 @@ class ApiController extends AbstractController
     }
 
     /**
+     * @Security("is_granted('ROLE_ADMIN') or is_granted('ROLE_AGRICULTEUR')")
      * @Route("/evenement/new", name="evenement_new")
      */
     public function evenement_new(Request $request,  SerializerInterface $serializer)
@@ -367,6 +477,7 @@ class ApiController extends AbstractController
     }
 
     /**
+     * @Security("is_granted('ROLE_ADMIN') or is_granted('ROLE_AGRICULTEUR')")
      * @Route("/evenement/edit/{id<\d+>}", name="evenement_edit")
      */
     public function evenement_edit(Request $request,  SerializerInterface $serializer, int $id)
@@ -407,9 +518,10 @@ class ApiController extends AbstractController
         return $response;
     }
     /**
+     * @Security("is_granted('ROLE_ADMIN')")
      * @Route("/scraper", name="scraper")
      */
-    public function index2(SerializerInterface $serializer)
+    public function scraper(SerializerInterface $serializer)
     {
         $actualites = $this->getDoctrine()->getRepository(Actualite::class)->findAll();
         $entityManager = $this->getDoctrine()->getManager();
@@ -439,9 +551,8 @@ class ApiController extends AbstractController
         //$actualites = $this->getDoctrine()->getRepository(Actualite::class)->findAll();
         //$data = $serializer->serialize($actualites, 'json');
         //$response = new Response($data);
-        $response = new Response('',204);
+        $response = new Response('', 204);
         $response->headers->set('Content-Type', 'application/json');
         return $response;
     }
-
 }
