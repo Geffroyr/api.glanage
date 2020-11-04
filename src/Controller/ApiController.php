@@ -168,19 +168,41 @@ class ApiController extends AbstractController
     public function evenement_get(int $id, SerializerInterface $serializer)
     {
         $evenement = $this->getDoctrine()->getRepository(Evenement::class)->find($id);
-        $data = $serializer->serialize(
-            $evenement,
-            'json',
-            [AbstractNormalizer::ATTRIBUTES => [
-                'id',
-                'date',
-                'lieu' => ['id', 'commune', 'latitude', 'longitude', 'codePostal'],
-                'evenementLegumes' => ['volume', 'legume' => ['id', 'name']],
-                'agriculteur' => ['id', 'username'],
-                'deroulements' => ['heure', 'description'],
-                'rendezvouses' => ['heure', 'description']
-            ]]
-        );
+        $user = $this->getUser();
+        switch ($user->getType()) {
+            case 'admin':
+                $data = $serializer->serialize(
+                    $evenement,
+                    'json',
+                    [AbstractNormalizer::ATTRIBUTES => [
+                        'id',
+                        'date',
+                        'lieu' => ['id', 'commune', 'latitude', 'longitude', 'codePostal'],
+                        'evenementLegumes' => ['volume', 'legume' => ['id', 'name']],
+                        'agriculteur' => ['id', 'username'],
+                        'deroulements' => ['heure', 'description'],
+                        'rendezvouses' => ['heure', 'description'],
+                        'evenementGlaneurs' => ['glaneur'=>['id','username'],'effectif'],
+                        'evenementRecuperateurs' => ['recuperateur'=>['id', 'username'],'legume'=>['id','name'],'volume']
+                    ]]
+                );
+                break;
+            default:
+                $data = $serializer->serialize(
+                    $evenement,
+                    'json',
+                    [AbstractNormalizer::ATTRIBUTES => [
+                        'id',
+                        'date',
+                        'lieu' => ['id', 'commune', 'latitude', 'longitude', 'codePostal'],
+                        'evenementLegumes' => ['volume', 'legume' => ['id', 'name']],
+                        'agriculteur' => ['id', 'username'],
+                        'deroulements' => ['heure', 'description'],
+                        'rendezvouses' => ['heure', 'description']
+                    ]]
+                );
+        }
+
         $response = new Response($data);
         $response->headers->set('Content-Type', 'application/json');
         return $response;
