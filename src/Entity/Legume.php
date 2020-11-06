@@ -23,15 +23,15 @@ class Legume
      */
     private $name;
 
-    /**
-     * @ORM\OneToMany(targetEntity="App\Entity\EvenementLegume", mappedBy="legume", orphanRemoval=true, cascade={"all"})
-     */
-    private $evenementLegumes;
+    // /**
+    //  * @ORM\OneToMany(targetEntity="App\Entity\EvenementLegume", mappedBy="legume", orphanRemoval=true, cascade={"all"})
+    //  */
+    // private $evenementLegumes;
 
-    /**
-     * @ORM\OneToMany(targetEntity="App\Entity\EvenementRecuperateur", mappedBy="legume", orphanRemoval=true, cascade={"all"})
-     */
-    private $evenementRecuperateurs;
+    // /**
+    //  * @ORM\OneToMany(targetEntity="App\Entity\EvenementRecuperateur", mappedBy="legume", orphanRemoval=true, cascade={"all"})
+    //  */
+    // private $evenementRecuperateurs;
 
     public function __construct()
     {
@@ -56,65 +56,65 @@ class Legume
         return $this;
     }
 
-    /**
-     * @return Collection|EvenementLegume[]
-     */
-    public function getEvenementLegumes(): Collection
-    {
-        return $this->evenementLegumes;
-    }
+    // /**
+    //  * @return Collection|EvenementLegume[]
+    //  */
+    // public function getEvenementLegumes(): Collection
+    // {
+    //     return $this->evenementLegumes;
+    // }
 
-    public function addEvenementLegume(EvenementLegume $evenementLegume): self
-    {
-        if (!$this->evenementLegumes->contains($evenementLegume)) {
-            $this->evenementLegumes[] = $evenementLegume;
-            $evenementLegume->setLegume($this);
-        }
+    // public function addEvenementLegume(EvenementLegume $evenementLegume): self
+    // {
+    //     if (!$this->evenementLegumes->contains($evenementLegume)) {
+    //         $this->evenementLegumes[] = $evenementLegume;
+    //         $evenementLegume->setLegume($this);
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    public function removeEvenementLegume(EvenementLegume $evenementLegume): self
-    {
-        if ($this->evenementLegumes->contains($evenementLegume)) {
-            $this->evenementLegumes->removeElement($evenementLegume);
-            // set the owning side to null (unless already changed)
-            if ($evenementLegume->getLegume() === $this) {
-                $evenementLegume->setLegume(null);
-            }
-        }
+    // public function removeEvenementLegume(EvenementLegume $evenementLegume): self
+    // {
+    //     if ($this->evenementLegumes->contains($evenementLegume)) {
+    //         $this->evenementLegumes->removeElement($evenementLegume);
+    //         // set the owning side to null (unless already changed)
+    //         if ($evenementLegume->getLegume() === $this) {
+    //             $evenementLegume->setLegume(null);
+    //         }
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    /**
-     * @return Collection|EvenementRecuperateur[]
-     */
-    public function getEvenementRecuperateurs(): Collection
-    {
-        return $this->evenementRecuperateurs;
-    }
+    // /**
+    //  * @return Collection|EvenementRecuperateur[]
+    //  */
+    // public function getEvenementRecuperateurs(): Collection
+    // {
+    //     return $this->evenementRecuperateurs;
+    // }
 
-    public function addEvenementRecuperateur(EvenementRecuperateur $evenementRecuperateur): self
-    {
-        if (!$this->evenementRecuperateurs->contains($evenementRecuperateur)) {
-            $this->evenementRecuperateurs[] = $evenementRecuperateur;
-            $evenementRecuperateur->setLegume($this);
-        }
+    // public function addEvenementRecuperateur(EvenementRecuperateur $evenementRecuperateur): self
+    // {
+    //     if (!$this->evenementRecuperateurs->contains($evenementRecuperateur)) {
+    //         $this->evenementRecuperateurs[] = $evenementRecuperateur;
+    //         $evenementRecuperateur->setLegume($this);
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    public function removeEvenementRecuperateur(EvenementRecuperateur $evenementRecuperateur): self
-    {
-        if ($this->evenementRecuperateurs->contains($evenementRecuperateur)) {
-            $this->evenementRecuperateurs->removeElement($evenementRecuperateur);
-            // set the owning side to null (unless already changed)
-            if ($evenementRecuperateur->getLegume() === $this) {
-                $evenementRecuperateur->setLegume(null);
-            }
-        }
+    // public function removeEvenementRecuperateur(EvenementRecuperateur $evenementRecuperateur): self
+    // {
+    //     if ($this->evenementRecuperateurs->contains($evenementRecuperateur)) {
+    //         $this->evenementRecuperateurs->removeElement($evenementRecuperateur);
+    //         // set the owning side to null (unless already changed)
+    //         if ($evenementRecuperateur->getLegume() === $this) {
+    //             $evenementRecuperateur->setLegume(null);
+    //         }
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 }

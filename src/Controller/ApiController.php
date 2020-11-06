@@ -12,6 +12,7 @@ use App\Entity\Agriculteur;
 use App\Entity\Utilisateur;
 use App\Form\EvenementType;
 use App\Form\GlaneurZoneType;
+use App\Entity\EvenementLegume;
 use App\Entity\EvenementGlaneur;
 use App\Repository\LieuRepository;
 use App\Entity\EvenementRecuperateur;
@@ -133,6 +134,18 @@ class ApiController extends AbstractController
     }
 
     /**
+     * @Route("/legume/list", name="legume_list")
+     */
+    public function legume_list(SerializerInterface $serializer)
+    {
+        $legumes = $this->getDoctrine()->getRepository(Legume::class)->findAll();
+        $data = $serializer->serialize($legumes, 'json');
+        $response = new Response($data);
+        $response->headers->set('Content-Type', 'application/json');
+        return $response;
+    }
+
+    /**
      * @Route("/evenement/list", name="evenement_list")
      */
     public function evenement_list(SerializerInterface $serializer, EvenementRepository $evenementRepository)
@@ -182,8 +195,8 @@ class ApiController extends AbstractController
                         'agriculteur' => ['id', 'username'],
                         'deroulements' => ['heure', 'description'],
                         'rendezvouses' => ['heure', 'description'],
-                        'evenementGlaneurs' => ['glaneur'=>['id','username'],'effectif'],
-                        'evenementRecuperateurs' => ['recuperateur'=>['id', 'username'],'legume'=>['id','name'],'volume']
+                        'evenementGlaneurs' => ['glaneur' => ['id', 'username'], 'effectif'],
+                        'evenementRecuperateurs' => ['recuperateur' => ['id', 'username'], 'legume' => ['id', 'name'], 'volume']
                     ]]
                 );
                 break;
@@ -473,11 +486,21 @@ class ApiController extends AbstractController
             'json',
             [AbstractNormalizer::ATTRIBUTES => [
                 'date',
-                'evenementLegumes' => ['volume', 'legume' => ['name']],
+                //'evenementLegumes' => ['volume', 'legume' => ['name']],
                 'deroulements' => ['heure', 'description'],
                 'rendezvouses' => ['heure', 'description']
             ]]
         );
+
+        $evenementLegumes = [];
+        for ($i = 0; $i < count($data['evenementLegumes']); $i++) {
+            $evenement_legume = new EvenementLegume();
+            $evenement_legume->setVolume($data['evenementLegumes'][$i]['volume']);
+            $evenement_legume->setLegume($this->getDoctrine()->getRepository(Legume::class)->find($data['evenementLegumes'][$i]['legume']['id']));
+            //$evenement->addEvenementLegume($evenement_legume);
+            $evenementLegumes[] = $evenement_legume;
+        }
+        $evenement->setEvenementLegumes($evenementLegumes);
 
         $evenement->setLieu($this->getDoctrine()->getRepository(Lieu::class)->find($data['lieu']['id']))
             ->setEnabled(true);
@@ -512,14 +535,23 @@ class ApiController extends AbstractController
             Evenement::class,
             'json',
             [AbstractNormalizer::ATTRIBUTES => [
-                'evenementLegumes' => ['volume', 'legume' => ['name']],
+                //'evenementLegumes' => ['volume', 'legume' => ['name']],
                 'deroulements' => ['heure', 'description'],
                 'rendezvouses' => ['heure', 'description']
             ]]
         );
 
-        $evenement->setEvenementLegumes($temp_evenement->getEvenementLegumes())
-            ->setDeroulements($temp_evenement->getDeroulements())
+        $evenementLegumes = [];
+        for ($i = 0; $i < count($data['evenementLegumes']); $i++) {
+            $evenement_legume = new EvenementLegume();
+            $evenement_legume->setVolume($data['evenementLegumes'][$i]['volume']);
+            $evenement_legume->setLegume($this->getDoctrine()->getRepository(Legume::class)->find($data['evenementLegumes'][$i]['legume']['id']));
+            //$evenement->addEvenementLegume($evenement_legume);
+            $evenementLegumes[] = $evenement_legume;
+        }
+        $evenement->setEvenementLegumes($evenementLegumes);
+
+        $evenement->setDeroulements($temp_evenement->getDeroulements())
             ->setRendezvouses($temp_evenement->getRendezvouses());
 
         $evenement->setDate(new \DateTime($data['date']))
@@ -545,30 +577,35 @@ class ApiController extends AbstractController
      */
     public function scraper(SerializerInterface $serializer)
     {
-        $actualites = $this->getDoctrine()->getRepository(Actualite::class)->findAll();
+        // $actualites = $this->getDoctrine()->getRepository(Actualite::class)->findAll();
         $entityManager = $this->getDoctrine()->getManager();
-        foreach ($actualites as $actualite) {
-            $entityManager->remove($actualite);
-        }
-        $entityManager->flush();
+        // foreach ($actualites as $actualite) {
+        //     $entityManager->remove($actualite);
+        // }
+        // $entityManager->flush();
         $client = new Client();
         $crawler = $client->request('GET', 'http://glanage-solidaire.fr');
         $crawler->filter('.actualites li')->each(function ($node) {
             $lien = $node->filter('a')->last()->attr('href');
             $client2 = new Client();
             $crawler2 = $client2->request('GET', $lien);
-            $actualite = new Actualite();
-            $actualite->setTitre($crawler2->filter('.titre')->text())
-                ->setContenu($crawler2->filter('.contenu')->text())
-                ->setDate(date_create_from_format('d/m/y', $crawler2->filter('.date')->text()))
-                ->setLien($lien);
-            $entityManager = $this->getDoctrine()->getManager();
-            $entityManager->persist($actualite);
-            $entityManager->flush();
-            $crawler2->filter('.galerie img')->each(function ($node2) {
-                $actualite = $this->getDoctrine()->getRepository(Actualite::class)->findOneBy(array(), array('id' => 'DESC'), 1, 0);
-                $actualite->addImage($node2->attr('src'));
-            });
+            if (!$this->getDoctrine()->getRepository(Actualite::class)->findOneBy(array('titre' => $crawler2->filter('.titre')->text()))) {
+                $actualite = new Actualite();
+                $actualite->setTitre($crawler2->filter('.titre')->text())
+                    ->setContenu($crawler2->filter('.contenu')->text())
+                    ->setDate(date_create_from_format('d/m/y', $crawler2->filter('.date')->text()))
+                    ->setLien($lien);
+                $entityManager = $this->getDoctrine()->getManager();
+                $entityManager->persist($actualite);
+                $entityManager->flush();
+                $crawler2->filter('.galerie img')->each(function ($node2) {
+                    $actualite = $this->getDoctrine()->getRepository(Actualite::class)->findOneBy(array(), array('id' => 'DESC'), 1, 0);
+                    $img = file_get_contents($node2->attr('src'));
+                    $path = "image" . "/" . basename($node2->attr('src'));
+                    file_exists($path) ?: file_put_contents($path, $img);
+                    $actualite->addImage($path);
+                });
+            }
         });
         //$actualites = $this->getDoctrine()->getRepository(Actualite::class)->findAll();
         //$data = $serializer->serialize($actualites, 'json');
