@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\LieuRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=LieuRepository::class)
@@ -14,26 +15,31 @@ class Lieu
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
+     * @Groups({"fromUtilisateur", "fromEvenement"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"fromUtilisateur", "fromEvenement"})
      */
     private $codePostal;
 
     /**
      * @ORM\Column(type="float")
+     * @Groups({"fromUtilisateur", "fromEvenement"})
      */
     private $latitude;
 
     /**
      * @ORM\Column(type="float")
+     * @Groups({"fromUtilisateur", "fromEvenement"})
      */
     private $longitude;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"fromUtilisateur", "fromEvenement"})
      */
     private $commune;
 

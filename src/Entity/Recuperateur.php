@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\RecuperateurRepository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=RecuperateurRepository::class)
@@ -13,6 +14,7 @@ class Recuperateur extends Utilisateur
 {
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\EvenementRecuperateur", mappedBy="recuperateur", orphanRemoval=true, cascade={"all"})
+     * @Groups({"fromUtilisateur"})
      */
     private $evenementRecuperateurs;
 
@@ -21,9 +23,14 @@ class Recuperateur extends Utilisateur
         $this->setRoles(['ROLE_RECUPERATEUR']);
     }
 
-    public function getEvenementRecuperateurs(): Collection
+    public function getType()
     {
-        return $this->evenementRecuperateurs;
+        return 'recuperateur';
+    }
+
+    public function getEvenementRecuperateurs()
+    {
+        return $this->evenementRecuperateurs->getValues();
     }
 
     public function addEvenementRecuperateur(EvenementRecuperateur $evenementRecuperateur): self

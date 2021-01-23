@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\EvenementGlaneurRepository")
@@ -20,12 +21,14 @@ class EvenementGlaneur
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\Evenement", inversedBy="evenementGlaneurs", cascade={"persist"})
      * @ORM\JoinColumn(nullable=false)
+     * @Groups({"fromUtilisateur"})
      */
     private $evenement;
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\Glaneur", inversedBy="evenementGlaneurs", cascade={"persist"})
      * @ORM\JoinColumn(nullable=false)
+     * @Groups({"fromEvenement"})
      */
     private $glaneur;
 
@@ -33,6 +36,7 @@ class EvenementGlaneur
      * @ORM\Column(type="integer")
      * @Assert\Positive
      * @Assert\NotNull
+     * @Groups({"fromUtilisateur", "fromEvenement"})
      */
     private $effectif;
 

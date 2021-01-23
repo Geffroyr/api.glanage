@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\UtilisateurRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=UtilisateurRepository::class)
@@ -16,19 +17,22 @@ use Symfony\Component\Security\Core\User\UserInterface;
  *     "Agriculteur" = "Agriculteur",
  *     "Recuperateur" = "Recuperateur",
  *     "Admin" = "Admin",
+ *     "Ambassadeur" = "Ambassadeur",
  * })
  */
-class Utilisateur implements UserInterface
+abstract class Utilisateur implements UserInterface
 {
     /**
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
+     * @Groups({"fromUtilisateur", "fromEvenement"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=180)
+     * @Groups({"fromUtilisateur", "fromEvenement"})
      */
     private $username;
 
@@ -45,31 +49,37 @@ class Utilisateur implements UserInterface
 
     /**
      * @ORM\Column(type="string", length=255, unique=true)
+     * @Groups({"fromUtilisateur"})
      */
     private $email;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"fromUtilisateur"})
      */
     private $lastname;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"fromUtilisateur"})
      */
     private $firstname;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @Groups({"fromUtilisateur"})
      */
     private $phone;
 
     /**
      * @ORM\Column(type="integer", nullable=true)
+     * @Groups({"fromUtilisateur"})
      */
     private $perimetre;
 
     /**
      * @ORM\ManyToOne(targetEntity=Lieu::class)
+     * @Groups({"fromUtilisateur"})
      */
     private $lieu;
 
@@ -77,18 +87,10 @@ class Utilisateur implements UserInterface
      * @ORM\Column(type="boolean")
      */
     private $enabled;
-
-    public function getType(): ?string {
-        if ($this->getRoles()[0]=='ROLE_GLANEUR'){
-            return 'glaneur';
-        } else if($this->getRoles()[0]=='ROLE_AGRICULTEUR') {
-            return 'agriculteur';
-        } else if ($this->getRoles()[0]=='ROLE_RECUPERATEUR'){
-            return 'recuperateur';
-        } else if ($this->getRoles()[0]=='ROLE_ADMIN'){
-            return 'admin';
-        }
-    }
+    /**
+     * @Groups({"fromUtilisateur"})
+     */
+    public abstract function getType();
 
     public function getId(): ?int
     {

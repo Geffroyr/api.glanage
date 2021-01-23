@@ -15,4 +15,8 @@ class Admin extends Utilisateur
     {
         $this->setRoles(['ROLE_ADMIN']);
     }
+    public function getType()
+    {
+        return 'admin';
+    }
 }

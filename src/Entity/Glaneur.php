@@ -2,9 +2,8 @@
 
 namespace App\Entity;
 
-use App\Repository\GlaneurRepository;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=GlaneurRepository::class)
@@ -13,6 +12,7 @@ class Glaneur extends Utilisateur
 {
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\EvenementGlaneur", mappedBy="glaneur", orphanRemoval=true, cascade={"all"})
+     * @Groups({"fromUtilisateur"})
      */
     private $evenementGlaneurs;
 
@@ -20,13 +20,14 @@ class Glaneur extends Utilisateur
     {
         $this->setRoles(['ROLE_GLANEUR']);
     }
-
-     /**
-     * @return Collection|EvenementGlaneur[]
-     */
-    public function getEvenementGlaneurs(): Collection
+    public function getType()
     {
-        return $this->evenementGlaneurs;
+        return 'glaneur';
+    }
+
+    public function getEvenementGlaneurs()
+    {
+        return $this->evenementGlaneurs->getValues();
     }
 
     public function addEvenementGlaneur(EvenementGlaneur $evenementGlaneur): self

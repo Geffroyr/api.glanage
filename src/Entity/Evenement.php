@@ -6,6 +6,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\EvenementRepository")
@@ -16,50 +18,59 @@ class Evenement
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
+     * @Groups({"fromUtilisateur", "fromEvenement"})
      */
     private $id;
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\Agriculteur", inversedBy="evenements", cascade={"all"})
      * @ORM\JoinColumn(nullable=false)
+     * @Groups({"fromEvenement"})
      */
     private $agriculteur;
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\Lieu", cascade={"all"})
      * @ORM\JoinColumn(nullable=false)
+     * @Groups({"fromEvenement"})
      */
     private $lieu;
 
     /**
      * @ORM\Column(type="date")
+     * @Groups({"fromEvenement"})
      */
     private $date;
 
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\EvenementLegume", mappedBy="evenement", orphanRemoval=true, cascade={"all"})
      * @Assert\Valid()
+     * @Groups({"fromEvenement"})
      */
     private $evenementLegumes;
 
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\EvenementGlaneur", mappedBy="evenement", orphanRemoval=true, cascade={"all"})
+     * @Groups({"fromEvenementAdmin"})
      */
     private $evenementGlaneurs;
 
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\EvenementRecuperateur", mappedBy="evenement", orphanRemoval=true, cascade={"all"})
      * @Assert\Valid()
+     * @Groups({"fromEvenementAdmin"})
      */
     private $evenementRecuperateurs;
 
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\Deroulement", mappedBy="evenement", orphanRemoval=true, cascade={"all"})
+     * @Groups({"fromEvenement"})
      */
     private $deroulements;
 
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\Rendezvous", mappedBy="evenement", orphanRemoval=true, cascade={"all"})
+     * @Groups({"fromEvenement"})
      */
     private $rendezvouses;
 
@@ -106,14 +117,8 @@ class Evenement
         return $this;
     }
 
-    /* public function getDate()
-    {
-        return $this->date;
-    } */
-
     public function getDate()
     {
-        /* return $this->date? $this->date->format('Y-m-d'):$this->date; */
         return $this->date;
     }
 
@@ -124,12 +129,9 @@ class Evenement
         return $this;
     }
 
-    /**
-     * @return Collection|EvenementLegume[]
-     */
-    public function getEvenementLegumes(): Collection
+    public function getEvenementLegumes()
     {
-        return $this->evenementLegumes;
+        return $this->evenementLegumes->getValues();
     }
 
     public function setEvenementLegumes($evenementLegumes):self
@@ -165,12 +167,9 @@ class Evenement
         return $this;
     }
 
-    /**
-     * @return Collection|EvenementGlaneur[]
-     */
-    public function getEvenementGlaneurs(): Collection
+    public function getEvenementGlaneurs()
     {
-        return $this->evenementGlaneurs;
+        return $this->evenementGlaneurs->getValues();
     }
 
     public function addEvenementGlaneur(EvenementGlaneur $evenementGlaneur): self
@@ -196,12 +195,9 @@ class Evenement
         return $this;
     }
 
-    /**
-     * @return Collection|EvenementRecuperateur[]
-     */
-    public function getEvenementRecuperateurs(): Collection
+    public function getEvenementRecuperateurs()
     {
-        return $this->evenementRecuperateurs;
+        return $this->evenementRecuperateurs->getValues();
     }
 
     public function addEvenementRecuperateur(EvenementRecuperateur $evenementRecuperateur): self
@@ -227,12 +223,10 @@ class Evenement
         return $this;
     }
 
-    /**
-     * @return Collection|Deroulement[]
-     */
+
     public function getDeroulements()
     {
-        return count($this->deroulements)>0? $this->deroulements:[];
+        return $this->deroulements->getValues();
     }
 
     public function setDeroulements($deroulements):self
@@ -268,13 +262,9 @@ class Evenement
         return $this;
     }
 
-    /**
-     * @return Collection|Rendezvous[]
-     */
     public function getRendezvouses()
     {
-        return count($this->rendezvouses)>0? $this->rendezvouses:[];
-        /* return $this->rendezvouses; */
+        return $this->rendezvouses->getValues();
     }
 
     public function setRendezvouses($rendezvouses):self

@@ -6,6 +6,7 @@ use App\Entity\Utilisateur;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\AgriculteurRepository;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=AgriculteurRepository::class)
@@ -14,6 +15,7 @@ class Agriculteur extends Utilisateur
 {
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\Evenement", mappedBy="agriculteur", orphanRemoval=true, cascade={"all"})
+     * @Groups({"fromUtilisateur"})
      */
     private $evenements;
 
@@ -22,12 +24,14 @@ class Agriculteur extends Utilisateur
         $this->setRoles(['ROLE_AGRICULTEUR']);
     }
 
-    /**
-     * @return Collection|Evenement[]
-     */
-    public function getEvenements(): Collection
+    public function getType()
     {
-        return $this->evenements;
+        return 'agriculteur';
+    }
+
+    public function getEvenements()
+    {
+        return $this->evenements->getValues();
     }
 
     public function addEvenement(Evenement $evenement): self

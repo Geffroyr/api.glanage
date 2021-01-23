@@ -55,7 +55,7 @@ class InscriptionController extends AbstractController
     }
 
     /**
-     * @Security("is_granted('ROLE_ADMIN')")
+     * @Security("is_granted('ROLE_ADMIN') or is_granted('ROLE_AMBASSADEUR')")
      * @Route("api/utilisateur/new", name="utilisateur_new")
      */
     public function utilisateur_new(Request $request, EntityManagerInterface $entityManager, UserPasswordEncoderInterface $encoder, MailerInterface $mailer)

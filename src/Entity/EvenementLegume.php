@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\EvenementLegumeRepository")
@@ -25,11 +26,13 @@ class EvenementLegume
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\Legume", inversedBy="evenementLegumes", cascade={"persist"})
      * @ORM\JoinColumn(nullable=false)
+     * @Groups({"fromUtilisateur", "fromEvenement"})
      */
     private $legume;
 
     /**
      * @ORM\Column(type="integer")
+     * @Groups({"fromUtilisateur", "fromEvenement"})
      */
     private $volume;
 

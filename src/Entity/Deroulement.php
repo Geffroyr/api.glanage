@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Entity\Evenement;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\DeroulementRepository")
@@ -25,11 +26,13 @@ class Deroulement
 
     /**
      * @ORM\Column(type="time")
+     * @Groups({"fromEvenement"})
      */
     private $heure;
 
     /**
      * @ORM\Column(type="string", length=100)
+     * @Groups({"fromEvenement"})
      */
     private $description;
 
